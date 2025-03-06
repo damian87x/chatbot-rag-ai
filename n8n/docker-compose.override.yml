@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  n8n:
+    # Override environment variables as needed
+    environment:
+      # Uncomment and modify these as needed
+      # - N8N_BASIC_AUTH_ACTIVE=true
+      # - N8N_BASIC_AUTH_USER=user
+      # - N8N_BASIC_AUTH_PASSWORD=password
+      # - N8N_ENCRYPTION_KEY=your-secret-encryption-key
+      # - N8N_EMAIL_MODE=smtp
+      # - N8N_SMTP_HOST=smtp.example.com
+      # - N8N_SMTP_PORT=587
+      # - N8N_SMTP_USER=user
+      # - N8N_SMTP_PASS=password
+      # - N8N_SMTP_SENDER=n8n@example.com
+      # - N8N_PUSH_BACKEND=websocket
+      
+      # Customize execution settings
+      - N8N_EXECUTIONS_TIMEOUT=300
+      - N8N_EXECUTIONS_TIMEOUT_MAX=3600
+      - N8N_EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - N8N_EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - N8N_EXECUTIONS_DATA_SAVE_ON_PROGRESS=true
+      - N8N_EXECUTIONS_DATA_PRUNE=false
+      
+      # Custom nodes settings
+      # - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom-extensions
+    
+    # Uncomment to add custom volumes
+    # volumes:
+    #  - ./custom-nodes:/home/node/.n8n/custom-extensions
+
+    # Uncomment to add resource limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 1G
+
+  # Optional: Add additional services that integrate with n8n
+  # Example: Add a Temporal service for advanced workflow handling
+  # temporal:
+  #   image: temporalio/auto-setup:1.13.0
+  #   ports:
+  #     - "7233:7233"
+  #   environment:
+  #     - CASSANDRA_SEEDS=cassandra
+  #   depends_on:
+  #     - cassandra
+  
+  # Example: Add a MongoDB service for additional data storage
+  # mongodb:
+  #   image: mongo:latest
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  
+# Uncomment to add additional volumes for optional services
+# volumes:
+#   mongodb_data:

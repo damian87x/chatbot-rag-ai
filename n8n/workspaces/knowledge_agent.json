@@ -1,0 +1,94 @@
+{
+  "name": "knowledge agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"chatInput\": \"Who can use the NHS App?\"\n}"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an NHS Knowledge Agent powered by Ollama's DeepSeek-R1 model and Chroma for semantic retrieval.\n\nYour job is to clearly answer questions related to NHS healthcare based strictly on the knowledge documents stored in your Chroma vector database.  \nAlways clearly mention the source if possible.\n\nIf the answer is not found in your stored knowledge, clearly respond:\n\"I currently do not have sufficient information on this topic.\"\n\nStructure responses in JSON clearly:\n\n{\n  \"answer\": \"<Clear answer based on NHS knowledge base>\",\n  \"source\": \"<name of document, if applicable>\"\n}\n\nHere is text: Who can use the NHS App?\nTo use the NHS App or log in through the NHS website you must be:\n\naged 13 or over\nregistered with an NHS GP surgery in England or the Isle of Man\nAged 13 to 15 years old\nYou’ll need to contact your GP surgery and request access to GP online services before you can use the NHS App.\n\nCannot set up an account\nIf you’re registered at a GP surgery outside of England or the Isle of Man. Contact your surgery to find out which online health services you can use.\n\nYou’re a member of the armed forces, or are a veteran, service leaver or non-mobilised reservist. If you’re registered at a surgery provided by Defence Medical Services (DMS), you cannot currently use the NHS App.\n\nYou can find out more about the health services available to you as a serving member of the armed forces, or as a veteran, service leaver and non-mobilised reservist.\n\nMore in Get started with the NHS App\nWho can use the NHS App?\nSetting up your NHS login\nHow to log in to the NHS App\nProving who you are to get full access to the NHS App\nPage last reviewed: 28 March 2024\nNext review due: 25 October 2025\n\n\nSet up NHS login\nWhat is NHS login?\nWhere you can use NHS login\nWhat you need to set up an NHS login\nHow to set up an NHS login\nWhat is NHS login?\nNHS login allows you to access lots of different health and care websites and apps with just one set of login details. You can securely access many digital health and care services with one email address and password.\n\nWhere you can use NHS login\nThere are lots of health and care websites and apps that allow you to use NHS login. These include NHS services, online pharmacies, patient access services, and online consultation services.\n\nList of websites and apps you can access with NHS login\n\nWhat you need to set up an NHS login\nTo set up an NHS login you will need:\n\nan email address (with more than 6 characters)\na mobile phone or a landline number\nTo be able to use some services, you will also need to provide your:\n\nNHS number or your full name\ndate of birth\npostcode\nTo access your health records or any personal information you will also need to provide high level proof of who you are. If your mobile phone number matches the one you have registered with your GP, we will use it to verify your identity. Otherwise, you will need to provide proof of identity.\n\nThis can be a:\n\npassport\nUK driving licence (full or provisional)\nBiometric Residence Permit (BRP)\nUK Residence Card, or EEA Biometric Residence Card (BRC) (including temporary pass)\nEuropean driving licence (full)\nEuropean national identity card\nIf you cannot provide a valid photo ID, you can use your registration details from your GP surgery.\n\nThese are:\n\na Linkage Key (also known as Passphrase)\nan ODS Code (also known as Organisation Code or Surgery ID)\nan Account ID\nYou need to ask your GP surgery for these details.\n\nHow to set up an NHS login\nYou must access a health and care website or app before you can set up an NHS login. Many of them will show the NHS login button.\n\nYou will need to:\n\nEnter your email address.\nCreate a password.\nEnter the security code we email to you.\nFor added security, you will need to set up Two-step verification by:\n\nProviding a mobile phone or landline number.\nEntering the 6 digit security code we send to this number.\nTo access some websites and apps, you may need to provide additional information and prove who you are. This is so we can connect you to your NHS record and protect your health information.\n\nMore information on how to prove who you are\nProving who you are to get full access to the NHS App\nIf you have not proven who you are, you'll see a message after you log in to the NHS App or through the NHS website. It will ask you to prove your identity to get full access.\n\nIf you do not see this message, you already have full access.\n\nYour GP surgery chooses the level of detail available for you to see in your health record. They may also choose to switch off features, like appointment booking, if they need to.\n\nHow to prove who you are\nYou can prove who you are using photo ID or your registration details for your GP surgery's online services.\n\nUse photo ID to prove who you are\n\nWhat to do if you do not have photo ID\n\nInformation:\nNHS login registrations may take longer than usual when there are high numbers of requests. Registrations will be processed as soon as possible.\n\nWhat you can do with your NHS App\nUsing the NHS App or the NHS website, you'll need to prove who you are before you can:\n\nbook and manage appointments\norder repeat prescriptions\nview your health record securely\nmanage your organ donation decision\nview your NHS number\nuse NHS 111 online\nWithout full access you can:\n\nsearch conditions and treatments\nfind NHS services near you\nMore in Get started with the NHS App\nWho can use the NHS App?\nSetting up your NHS login\nHow to log in to the NHS App\nProving who you are to get full access to the NHS App\nPage last reviewed: 28 March 2024\nNext review due: 25 October 2025"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        700,
+        340
+      ],
+      "id": "713c93a8-1fcb-44af-9cb8-33af275f2060",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:1.5b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        620,
+        580
+      ],
+      "id": "a11228d1-f74f-4de4-b0b8-10c2247f323c",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rItVcJ0PFjJ2DgJ4",
+          "name": "Ollama account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7c529ff5-77a1-4468-99ab-a48547a44723",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e0f59cb8190cf374d697b3238c8ac5e660ca6b9b8c0f7c01f4338f75d5cdc01"
+  },
+  "id": "xKORaAvlqE4r0hyd",
+  "tags": []
+}

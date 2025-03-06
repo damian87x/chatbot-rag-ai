@@ -1,0 +1,5 @@
+praisonaiagents[knowledge]
+python-dotenv
+ollama==0.1.24
+chromadb
+streamlit

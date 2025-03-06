@@ -1,0 +1,318 @@
+{
+  "name": "Ai Agent Router",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fc97eea3-e6fc-4fcd-9b8b-57302be2ee57",
+      "name": "On new manual Chat Message",
+      "type": "@n8n/n8n-nodes-langchain.manualChatTrigger",
+      "position": [
+        0,
+        -180
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "id": "ad7cbebb-c45f-46fb-a4b9-a489c3e09d31",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        360,
+        360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "id": "565db4a5-d90c-484c-af9b-7d54bb32b5ed",
+      "name": "Ollama Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [
+        140,
+        380
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "rItVcJ0PFjJ2DgJ4",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractJsonFromOutput(output) {\n    const jsonMatch = output.match(/```json\\n([\\s\\S]*?)\\n```/);\n    if (jsonMatch && jsonMatch[1]) {\n        try {\n            const jsonString = jsonMatch[1];\n            const data = JSON.parse(jsonString);\n            return data;\n        } catch (error) {\n            console.error(\"Failed to parse JSON\", error);\n            return null;\n        }\n    } else {\n        console.error(\"No JSON found in the output\");\n        return null;\n    }\n}\n\nconst extractedFields = extractJsonFromOutput($item(\"0\").$node[\"AI Agent Router\"].json[\"output\"]);\n\nreturn extractedFields;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "8fe45890-7fea-4e26-899d-d748f388b491",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        60
+      ],
+      "id": "b32af15c-4227-4d28-9952-470194ebcb93",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rItVcJ0PFjJ2DgJ4",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d643491a-9595-4268-b8ab-9a19ca1bef17",
+              "leftValue": "={{ $json.selected_agent }}",
+              "rightValue": "general_knowledge_agent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        740,
+        200
+      ],
+      "id": "272ec93f-e21d-46f7-8a28-8889aec10190",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.input }}",
+        "options": {
+          "systemMessage": "=You are a helpful assistant, with appointment_booking_agent tool and general_knowledge_agent tool. your task is to find out based on the user context what agent to use, when you using agent you have to send chatInput with json \n\nAvailable agents/actions:\n\n1. \"appointment_booking_agent\"  \n   - Handles appointment scheduling (GP, dentist, specialist, etc.)\n   - Requires clearly defined date, time, appointment_type parameters.\n\n2. \"general_knowledge_agent\":\n   - Answers general NHS-related knowledge questions, fetches documents from embeddings.\n\n### Important Rules:\n- Clearly identify the user's intent.\n- Select only ONE best-fitting agent per query.\n\nImportant! You always have to use tool before you respond \n\nYour response must always be structured clearly in JSON format:\n\n{\n  \"intent\": \"<Short and clear summary of user's intention>\",\n  \"selected_agent\": \"<exact agent name from above>\",\n  \"reasoning\": \"<brief reasoning why this agent was selected>\",\n  \"params\": { \"<param1>\": \"<value1>\", ... }\n}\n\n\n## 📌 **Example for AI Router clearly:**\n\n**USER INPUT:**  \n> \"I want to book a GP appointment next Tuesday at 15:00.\"\n\n**ROUTER OUTPUT (Correct):**  \n\n```json\n{\n  \"intent\": \"Book GP appointment on 2025-03-11 at 15:00\",\n  \"selected_agent\": \"appointment_booking_agent\",\n  \"params\": {\n    \"date\": \"2025-03-11\",\n    \"time\": \"15:00\",\n    \"appointment_type\": \"GP\"\n  }\n}"
+        }
+      },
+      "id": "02b0f57f-f6e7-4e11-adcc-d4a599cc8421",
+      "name": "AI Agent Router",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        300,
+        0
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=SYSTEM:\nYou are an NHS Knowledge Agent powered by Ollama's DeepSeek-R1 model and Chroma for semantic retrieval.\n\nYour job is to clearly answer questions related to NHS healthcare based strictly on the knowledge documents stored in your Chroma vector database.  \nAlways clearly mention the source if possible.\n\nIf the answer is not found in your stored knowledge, clearly respond:\n\"I currently do not have sufficient information on this topic.\"\n\nStructure responses in JSON clearly:\n\n{\n  \"answer\": \"<Clear answer based on NHS knowledge base>\",\n  \"source\": \"<name of document, if applicable>\"\n}\n\nHere is text: Who can use the NHS App?\nTo use the NHS App or log in through the NHS website you must be:\n\naged 13 or over\nregistered with an NHS GP surgery in England or the Isle of Man\nAged 13 to 15 years old\nYou’ll need to contact your GP surgery and request access to GP online services before you can use the NHS App.\n\nCannot set up an account\nIf you’re registered at a GP surgery outside of England or the Isle of Man. Contact your surgery to find out which online health services you can use.\n\nYou’re a member of the armed forces, or are a veteran, service leaver or non-mobilised reservist. If you’re registered at a surgery provided by Defence Medical Services (DMS), you cannot currently use the NHS App.\n\nYou can find out more about the health services available to you as a serving member of the armed forces, or as a veteran, service leaver and non-mobilised reservist.\n\nMore in Get started with the NHS App\nWho can use the NHS App?\nSetting up your NHS login\nHow to log in to the NHS App\nProving who you are to get full access to the NHS App\nPage last reviewed: 28 March 2024\nNext review due: 25 October 2025\n\n\nSet up NHS login\nWhat is NHS login?\nWhere you can use NHS login\nWhat you need to set up an NHS login\nHow to set up an NHS login\nWhat is NHS login?\nNHS login allows you to access lots of different health and care websites and apps with just one set of login details. You can securely access many digital health and care services with one email address and password.\n\nWhere you can use NHS login\nThere are lots of health and care websites and apps that allow you to use NHS login. These include NHS services, online pharmacies, patient access services, and online consultation services.\n\nList of websites and apps you can access with NHS login\n\nWhat you need to set up an NHS login\nTo set up an NHS login you will need:\n\nan email address (with more than 6 characters)\na mobile phone or a landline number\nTo be able to use some services, you will also need to provide your:\n\nNHS number or your full name\ndate of birth\npostcode\nTo access your health records or any personal information you will also need to provide high level proof of who you are. If your mobile phone number matches the one you have registered with your GP, we will use it to verify your identity. Otherwise, you will need to provide proof of identity.\n\nThis can be a:\n\npassport\nUK driving licence (full or provisional)\nBiometric Residence Permit (BRP)\nUK Residence Card, or EEA Biometric Residence Card (BRC) (including temporary pass)\nEuropean driving licence (full)\nEuropean national identity card\nIf you cannot provide a valid photo ID, you can use your registration details from your GP surgery.\n\nThese are:\n\na Linkage Key (also known as Passphrase)\nan ODS Code (also known as Organisation Code or Surgery ID)\nan Account ID\nYou need to ask your GP surgery for these details.\n\nHow to set up an NHS login\nYou must access a health and care website or app before you can set up an NHS login. Many of them will show the NHS login button.\n\nYou will need to:\n\nEnter your email address.\nCreate a password.\nEnter the security code we email to you.\nFor added security, you will need to set up Two-step verification by:\n\nProviding a mobile phone or landline number.\nEntering the 6 digit security code we send to this number.\nTo access some websites and apps, you may need to provide additional information and prove who you are. This is so we can connect you to your NHS record and protect your health information.\n\nMore information on how to prove who you are\nProving who you are to get full access to the NHS App\nIf you have not proven who you are, you'll see a message after you log in to the NHS App or through the NHS website. It will ask you to prove your identity to get full access.\n\nIf you do not see this message, you already have full access.\n\nYour GP surgery chooses the level of detail available for you to see in your health record. They may also choose to switch off features, like appointment booking, if they need to.\n\nHow to prove who you are\nYou can prove who you are using photo ID or your registration details for your GP surgery's online services.\n\nUse photo ID to prove who you are\n\nWhat to do if you do not have photo ID\n\nInformation:\nNHS login registrations may take longer than usual when there are high numbers of requests. Registrations will be processed as soon as possible.\n\nWhat you can do with your NHS App\nUsing the NHS App or the NHS website, you'll need to prove who you are before you can:\n\nbook and manage appointments\norder repeat prescriptions\nview your health record securely\nmanage your organ donation decision\nview your NHS number\nuse NHS 111 online\nWithout full access you can:\n\nsearch conditions and treatments\nfind NHS services near you\nMore in Get started with the NHS App\nWho can use the NHS App?\nSetting up your NHS login\nHow to log in to the NHS App\nProving who you are to get full access to the NHS App\nPage last reviewed: 28 March 2024\nNext review due: 25 October 2025\nEND_SYSTEM\nUser prompt\n{{ $json.reasoning }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1020,
+        -160
+      ],
+      "id": "6c33b2ff-f49d-43d4-a2f7-8351147ac28d",
+      "name": "kwnolage base agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        940,
+        480
+      ],
+      "id": "d8a34e19-9069-493a-8ffb-c32cec8fa96a",
+      "name": "Ollama Chat Model2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rItVcJ0PFjJ2DgJ4",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an NHS Appointment Booking Agent.\\n\\nYou ONLY handle booking, modifying, and canceling appointments.\\n\\nYour tasks include:\\n- Booking an appointment clearly specified by date (YYYY-MM-DD), time (HH:MM, 24-hour format), and appointment_type (e.g., GP, dentist).\\n- Modifying or canceling existing appointments with clearly defined parameters.\\n\\nPlease handle the following appointment request based on the parameters provided:\\n\\n- Date: {{ $json.params.date ? $json.params.date : 'Not specified' }}\\n- Time: {{ $json.params.time ? $json.params.time : 'Not specified' }}\\n- Appointment Type: {{ $json.params.appointment_type ? $json.params.appointment_type : 'Not specified' }}\\n\\n{% if $json.params.missing_params %}\\nNote: The following information is missing and needs to be collected: {{ $json.params.missing_params.join(', ') }}\\n{% endif %}\\n\\n{% if $json.memoryContext %}\\n{{ $json.memoryContext }}\\n{% endif %}\\n\\nIntent: {{ $json.intent }}\\n\\nAlways respond in this JSON format:\\n\\n{\\n  \\\"status\\\": \\\"<success | failure | error>\\\",\\n  \\\"details\\\": \\\"<details of action>\\\",\\n  \\\"appointment\\\": {\\n    \\\"date\\\": \\\"<YYYY-MM-DD>\\\",\\n    \\\"time\\\": \\\"<HH:MM>\\\",\\n    \\\"type\\\": \\\"<appointment_type>\\\"\\n  }\\n}\\n\\nIf the request is unclear or missing critical information (date, time, appointment_type), respond:\\n\\n{\\n  \\\"status\\\": \\\"error\\\",\\n  \\\"error\\\": \\\"missing_information\\\",\\n  \\\"missing_params\\\": [\\\"list missing params\\\"],\\n  \\\"message\\\": \\\"<Clear request for missing information>\\\"\\n}\\n\\nDo NOT handle non-appointment queries. Refer them back to the router.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        960,
+        300
+      ],
+      "id": "2eb6041e-74e9-4444-95dc-8e8209eadd5d",
+      "name": "AI Agent Appointments"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c138afc5-bc22-49ff-afe6-4006205eceaa",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "05414bdd-010b-4659-b87f-d14d5ff9afa4",
+      "name": "Webhook",
+      "webhookId": "c138afc5-bc22-49ff-afe6-4006205eceaa"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On new manual Chat Message": {
+      "main": [
+        []
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "kwnolage base agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "kwnolage base agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Router": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "kwnolage base agent": {
+      "main": [
+        []
+      ]
+    },
+    "Ollama Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Appointments",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "990d5bf0-101d-4c4d-9c29-c286dc9b1bf7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e0f59cb8190cf374d697b3238c8ac5e660ca6b9b8c0f7c01f4338f75d5cdc01"
+  },
+  "id": "9QNb0nGVUjPEC8Dm",
+  "tags": []
+}
